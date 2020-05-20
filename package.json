@@ -1,0 +1,113 @@
+{
+  "name": "ngx-translate-utils",
+  "displayName": "ngx-translate-utils",
+  "description": "ngx-translate Utilities",
+  "version": "0.0.1",
+  "publisher": "nikhilgoud",
+  "engines": {
+    "vscode": "^1.19.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Other"
+  ],
+  "keywords": [
+    "ngx-translate",
+    "translate",
+    "translations",
+    "angular"
+  ],
+  "activationEvents": [
+    "onCommand:ngxu.zombies",
+    "onCommand:ngxu.createTranslation",
+    "onLanguage:html",
+    "onLanguage:typescript"
+  ],
+  "main": "./out/extension",
+  "contributes": {
+    "commands": [
+      {
+        "command": "ngxu.zombies",
+        "title": "Find Unused translations in this file",
+        "category": "NGX-Translate"
+      },
+      {
+        "command": "ngxu.createTranslation",
+        "title": "Generate Translation String",
+        "category": "NGX-Translate"
+      }
+    ],
+    "configuration": {
+      "type": "string",
+      "title": "ngx-translate-utils configuration",
+      "properties": {
+        "ngx-translate-utils.langFileFolderPath": {
+          "type": "string",
+          "default": "**/src/assets/i18n/",
+          "description": "Base Location for i18n json files folder"
+        },
+        "ngx-translate-utils.includeAll": {
+          "type": "boolean",
+          "default": false,
+          "description": "Consider all language files to lookup"
+        },
+        "ngx-translate-utils.defaultLang": {
+          "type": "string",
+          "default": "en",
+          "description": "Language file to lookup for autocomplete suggestions example: en, en-US, de, en-IN etc."
+        },
+        "ngx-translate-utils.autocapitalize": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically capitalize the translation string key - only applies in snake case mode."
+        },
+        "ngx-translate-utils.caseMode": {
+          "type": "string",
+          "default": "snake",
+          "description": "Type of case to use for translation string - options are 'camel' and 'snake'."
+        },
+        "ngx-translate-utils.replaceOnTranslate": {
+          "type": "boolean",
+          "default": true,
+          "description": "Replace the selected text after generating a translation string."
+        },
+        "ngx-translate-utils.translatePipeName": {
+          "type": "string",
+          "default": "translate",
+          "description": "The name of the pipe to handle the translation."
+        },
+        "ngx-translate-utils.translatePlaceholder": {
+          "type": "string",
+          "default": "this.translateService.instant({key})",
+          "description": "The code block to handle the translation in ts files."
+        },
+        "ngx-translate-utils.quote": {
+          "type": "string",
+          "default": "'",
+          "description": "Which quote to use around the inserted translation key."
+        },
+        "ngx-translate-utils.padding": {
+          "type": "boolean",
+          "default": true,
+          "description": "Add spaces inside the curly bracket pair."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "postinstall": "node ./node_modules/vscode/bin/install",
+    "test": "npm run compile && node ./node_modules/vscode/bin/test"
+  },
+  "devDependencies": {
+    "typescript": "^2.6.1",
+    "vscode": "^1.1.6",
+    "@types/node": "^7.0.43",
+    "@types/mocha": "^2.2.42"
+  },
+  "dependencies": {
+    "copy-paste": "^1.3.0"
+  }
+}
