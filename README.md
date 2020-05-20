@@ -10,11 +10,13 @@ This is created using the existing extensions
 
 ## Features
 
-- When having a ngx-translate translation file opened, you can hit F1 and type ```Ununsed Keys: Find Unused translations in this file.```.  
-A diff editor will be openend showing the unused keys.
 - Hover on a translation key to displays values from all language files (normally located in a [language-code].json file). 
 - Suggests keys from en.json for autocomplete in both ```HTML``` & ```typescrpt``` files 
 - Ctrl+Click on translation keys to go to value/peek  at all translation files.
+- Turns selected text into a ngx-translate snippet string and pipe. Select hardcoded text and hit F1 and type ```NGX-Translate: Generate Translation code snippet.```  
+Incase of new key the ```"KEY": "VALUE"``` string is copied to clipboard for [defaultLanguage].json file.
+- When having a ngx-translate translation file opened, Hit F1 and type ```NGX-Translate: Find Unused translations in this file.```   
+A diff editor will be openend showing the unused keys.
 
 ## Contribute / Bugs / Feature Requests / Help
 

@@ -7,7 +7,7 @@ import {
   FindObjectsForKeyInResourceFiles,
 } from "./utils";
 
-export async function generateTranslationString() {
+export async function generateTranslationString(context: vscode.ExtensionContext) {
   const settings: ConfigurationSettings = getCurrentVscodeSettings();
 
   // Get the active editor window

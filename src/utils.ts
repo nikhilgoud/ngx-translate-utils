@@ -30,7 +30,7 @@ export function GetKeyAtPositionInDocument(position: vscode.Position, document: 
   const wordRange = document.getWordRangeAtPosition(position, htmlRegex);
   if (document.languageId === "html" && !wordRange) {
     // Return null because the item is not a resource key.
-    return null;
+    return { clickedKey: null, range: null };
   }
   if (document.languageId === "typescript") {
     const ltext = document.lineAt(position.line).text.substr(0, position.character);
@@ -39,7 +39,7 @@ export function GetKeyAtPositionInDocument(position: vscode.Position, document: 
     const vi = ltext.lastIndexOf("getI18nValue(");
 
     if (!(ii > -1 || gi > -1 || vi > -1)) {
-      return null;
+      return { clickedKey: null, range: null };
     }
     // const ni = [ii, gi, vi].reduce((p, c) => (Math.abs(c - position.character) < Math.abs(p - position.character) ? c : p));
     let nstart = new vscode.Position(position.line, ltext.lastIndexOf("'") + 1);
@@ -136,7 +136,7 @@ function getLineNumberForKeyValueInDocument(search: string, document: vscode.Tex
 /**
  * Returns Unused translation keys for the selected
  */
-export function zombieCheck() {
+export function zombieCheck(context: vscode.ExtensionContext) {
   const currentFileName = vscode.window.activeTextEditor.document.fileName;
   if (!currentFileName.endsWith(".json")) {
     vscode.window.showWarningMessage("Expected a JSON file.");

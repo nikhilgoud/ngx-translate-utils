@@ -7,7 +7,10 @@ import { zombieCheck } from "./utils";
 import { generateTranslationString } from "./generateTranslation";
 
 export function activate(context: vscode.ExtensionContext) {
+  // unused keys
   const checkForZombies = vscode.commands.registerCommand("ngxu.zombies", zombieCheck);
+  
+  // generate translation
   const createTranslation = vscode.commands.registerCommand("ngxu.createTranslation", generateTranslationString);
 
   // Peek
