@@ -25,9 +25,9 @@ export class ResourceHoverProvider implements HoverProvider {
           // let openCommandUri = Uri.parse(`command:open?${encodeURIComponent(JSON.stringify([{ resource: ff.uri }]))}`);
           let openCommandUri = "";
           // cc = `[${l.path.split("/").pop()}](${openCommandUri}) - ${l.value}`;
-          cc = `${l.path.split("/").pop()} - \`\`\`${l.value}\`\`\``;
+          cc = `${l.fileName} - \`\`\`${l.value}\`\`\``;
         } else {
-          cc = `${l.path.split("/").pop()} - NOT FOUND`;
+          cc = `${l.fileName} - NOT FOUND`;
         }
 
         md.appendMarkdown(cc);

@@ -72,6 +72,7 @@ export function FindObjectsForKeyInResourceFiles(key: string, isKey = true) {
           const { lineNumber, value, field } = getLineNumberForKeyValueInDocument(key, document, isKey);
           return {
             path: file.fsPath,
+            fileName: file.fsPath.split(/(\/|\\)/).pop(),
             uri: document.uri,
             match: !!value,
             lineNumber: lineNumber,
@@ -112,14 +113,17 @@ export function GetAllLanguageFiles() {
  * @param document The document as vscode.TextDocument.
  */
 function getLineNumberForKeyValueInDocument(search: string, document: vscode.TextDocument, isKey = true) {
-  let keyprefix;
+  let keyprefix = "";
   for (let i = 0; i < document.lineCount; i++) {
     let line = document.lineAt(i);
     if (line.text.trim().endsWith(",")) {
       const lt = line.text.substring(0, line.text.length - 1);
       const kv = JSON.parse(`{${lt}}`);
       // const matches = key.split(".").reduce((o,k) => (typeof o == "undefined" || o === null) ? o : o[k], kv);
-      if ((isKey && search.endsWith(Object.keys(kv).pop())) || (!isKey && kv[Object.keys(kv).pop()] === search)) {
+      if (
+        (isKey && getTranslationValue(kv, keyprefix.length > 0 ? search.slice(keyprefix.length + 1) : search)) ||
+        (!isKey && (kv[Object.keys(kv).pop()].replace(/\s?\n\s?/g, ' ') === search || kv[Object.keys(kv).pop()].replace(/\s?\n\s?/g, ' ').toLowerCase() === search.toLowerCase()))
+      ) {
         return {
           lineNumber: line.lineNumber,
           field: keyprefix ? `${keyprefix}.${Object.keys(kv).pop()}` : Object.keys(kv).pop(),
@@ -128,9 +132,12 @@ function getLineNumberForKeyValueInDocument(search: string, document: vscode.Tex
       }
     } else if (line.text.replace(/\s/g, "").endsWith(":{")) {
       const startingkey = line.text.split(":")[0].replace(/"/g, "").trim();
-      keyprefix = keyprefix ? `${keyprefix}.${startingkey}` : startingkey;
+      keyprefix = keyprefix.length > 0 ? `${keyprefix}.${startingkey}` : startingkey;
+    } else if (line.text.replace(/\s/g, "").endsWith("},")) {
+      keyprefix = keyprefix.slice(0, keyprefix.lastIndexOf("."));
     }
   }
+  return { lineNumber: null, field: null, value: null };
 }
 
 /**
@@ -260,4 +267,22 @@ export function getCurrentVscodeSettings(): ConfigurationSettings {
 export function getI18nPath() {
   const settings = getCurrentVscodeSettings();
   return settings.langFileFolderPath + (settings.includeAll ? "**/*" : settings.defaultLang) + ".json";
+}
+
+export function getTranslationValue(target: any, key: string): string {
+  let keys = typeof key === "string" ? key.split(".") : [key];
+  key = "";
+  do {
+    key += keys.shift();
+    if (!!target && !!target[key] && (typeof target[key] === "object" || !keys.length)) {
+      target = target[key];
+      key = "";
+    } else if (!keys.length) {
+      target = undefined;
+    } else {
+      key += ".";
+    }
+  } while (keys.length);
+
+  return target;
 }

@@ -24,7 +24,7 @@ Not yet decided.
 
 ## Requirements
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+Angular project with ngx-translate
 
 ## Extension Settings
 
@@ -36,12 +36,4 @@ No issues yet.
 
 ## Release Notes
 
-### 0.0.1  
-Initial features added
-- Unused keys from selected language json file in diff window  
-- Displays values from all language files  
-- Provides keys for autocomplete
-- peek all translation files on ctrl+click.
-- convert selected hardcoded text into a ngx-translate string and pipe.
-
-
+see CHANGELOG

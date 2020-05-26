@@ -23,18 +23,22 @@ export async function generateTranslationString(context: vscode.ExtensionContext
     return;
   }
 
-  return FindObjectsForKeyInResourceFiles(selectedText, false).then(async (foundObjects) => {
-    let input = await vscode.window.showInputBox({
-      value: foundObjects[0].key,
-      prompt: "Gets key from default lang file, Modify key for this translation or leave blank to use value",
-      placeHolder: 'e.g. "hello world" will generate a key named "HELLO_WORLD"',
-    });
-    if (input === undefined) {
-      // cancelled
-      return;
+  return FindObjectsForKeyInResourceFiles(selectedText.replace(/\s?\\n\s?/g, ' '), false).then(async (foundObjects) => {
+    let input = foundObjects && foundObjects.length > 0 && foundObjects[0].key;
+    if (!input) {
+      const key = getTranslationKeyFromString(selectedText, settings.caseMode, settings.autocapitalize);
+      input = await vscode.window.showInputBox({
+        value: key,
+        prompt: "Gets key from default lang file, Modify key for this translation or leave blank to use value",
+        placeHolder: 'e.g. "hello world" will generate a key named "HELLO_WORLD"',
+      });
+      if (input === undefined) {
+        // cancelled
+        return;
+      }
     }
     try {
-      const key = getTranslationKeyFromString(input || selectedText, settings.caseMode, settings.autocapitalize);
+      const key = getTranslationKeyFromString(input, settings.caseMode, settings.autocapitalize);
       // Generate a json key/value pair
       const value = `"${key}": "${selectedText}"`;
       // Copy the translation json to the clipboard

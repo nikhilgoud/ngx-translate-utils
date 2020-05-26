@@ -8,7 +8,7 @@ import {
   CompletionItem,
   CompletionList,
 } from "vscode";
-import { GetKeyAtPositionInDocument, getTranslationKeys, getI18nPath } from "./utils";
+import { GetKeyAtPositionInDocument, getTranslationKeys, getI18nPath, getTranslationValue } from "./utils";
 
 export class ResourceCompletionProvider implements CompletionItemProvider {
   provideCompletionItems(
@@ -18,6 +18,7 @@ export class ResourceCompletionProvider implements CompletionItemProvider {
   ): ProviderResult<CompletionList> {
     const { clickedKey } = GetKeyAtPositionInDocument(position, document);
 
+    
     let completionItems = new Array<CompletionItem>();
     return vscode.workspace
       .findFiles(getI18nPath(), "**​/node_modules/**")
@@ -30,7 +31,7 @@ export class ResourceCompletionProvider implements CompletionItemProvider {
 
             citems.forEach((f) => {
               const ci = new CompletionItem(f.replace(clickedKey, ""), vscode.CompletionItemKind.Text);
-              ci.documentation = `${file.fsPath.split(/(\/|\\)/).pop()}:- ${this.getValue(json, f)}`;
+              ci.documentation = `${file.fsPath.split(/(\/|\\)/).pop()}:- ${getTranslationValue(json, f)}`;
               completionItems.push(ci);
             });
           });
@@ -42,23 +43,5 @@ export class ResourceCompletionProvider implements CompletionItemProvider {
           return result;
         });
       });
-  }
-
-  getValue(target: any, key: string): any {
-    let keys = typeof key === "string" ? key.split(".") : [key];
-    key = "";
-    do {
-      key += keys.shift();
-      if (!!target && !!target[key] && (typeof target[key] === "object" || !keys.length)) {
-        target = target[key];
-        key = "";
-      } else if (!keys.length) {
-        target = undefined;
-      } else {
-        key += ".";
-      }
-    } while (keys.length);
-
-    return target;
   }
 }

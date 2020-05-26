@@ -7,6 +7,11 @@ Initial features added
 - Displays values from all language files  
 - Provides keys for autocomplete
 - peek all translation files on ctrl+click.
+
+## 0.0.10
+- Bug Fixes & Improvements.
+- Added vscode settings support.
+- Default language support
 - convert selected hardcoded text into a ngx-translate string and pipe.
 
 
