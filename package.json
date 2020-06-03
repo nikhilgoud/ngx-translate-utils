@@ -2,7 +2,7 @@
   "name": "ngx-translate-utils",
   "displayName": "ngx-translate-utils",
   "description": "ngx-translate Utilities",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "publisher": "nikhilgoud",
   "engines": {
     "vscode": "^1.19.0"
@@ -24,11 +24,15 @@
     "ngx-translate",
     "translate",
     "translations",
-    "angular"
+    "angular",
+    "i18n",
+    "internationalization"
   ],
   "activationEvents": [
     "onCommand:ngxu.zombies",
     "onCommand:ngxu.createTranslation",
+    "onCommand:ngxu.missed",
+    "onCommand:ngxu.organize",
     "onLanguage:html",
     "onLanguage:typescript"
   ],
@@ -38,12 +42,26 @@
       {
         "command": "ngxu.zombies",
         "title": "Find Unused translations in this file",
-        "category": "NGX-Translate"
+        "category": "NGX-Translate",
+        "enablement": "editorLangId === json && workbenchState === workspace"
       },
       {
         "command": "ngxu.createTranslation",
         "title": "Generate Translation code snippet",
-        "category": "NGX-Translate"
+        "category": "NGX-Translate",
+        "enablement": "workbenchState === workspace"
+      },
+      {
+        "command": "ngxu.missed",
+        "title": "Find Missing translations in this file after oraganizing with base",
+        "category": "NGX-Translate",
+        "enablement": "editorLangId === json && workbenchState === workspace"
+      },
+      {
+        "command": "ngxu.organize",
+        "title": "Organize translations in this file with base language file",
+        "category": "NGX-Translate",
+        "enablement": "editorLangId === json && workbenchState === workspace"
       }
     ],
     "configuration": {
@@ -90,6 +108,11 @@
           "default": "this.translateService.instant({key})",
           "description": "The code block to handle the translation in ts files."
         },
+        "ngx-translate-utils.translateJSONPlaceholder": {
+          "type": "string",
+          "default": "{key}",
+          "description": "The code block to handle the translation in json files."
+        },
         "ngx-translate-utils.quote": {
           "type": "string",
           "default": "'",
@@ -99,6 +122,16 @@
           "type": "boolean",
           "default": true,
           "description": "Add spaces inside the curly bracket pair."
+        },
+        "ngx-translate-utils.promptForOrganize": {
+          "type": "boolean",
+          "default": true,
+          "description": "Open diff window with changes to do for organizing language File."
+        },
+        "ngx-translate-utils.ignorePatternForGenerate": {
+          "type": "string",
+          "default": "\\s?(\\n|<br>|<html>|<\\/html>|\\s)\\s?",
+          "description": "Regex of vals to ignore while generating translation snippet."
         }
       }
     }

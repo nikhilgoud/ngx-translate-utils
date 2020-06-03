@@ -1,5 +1,5 @@
-import * as vscode from "vscode";
-import * as fs from "fs";
+import * as vscode from 'vscode';
+import * as fs from 'fs';
 
 export interface ConfigurationSettings extends vscode.WorkspaceConfiguration {
   includeAll: boolean;
@@ -9,9 +9,12 @@ export interface ConfigurationSettings extends vscode.WorkspaceConfiguration {
   replaceOnTranslate: boolean;
   translatePipeName: string;
   translatePlaceholder: string;
+  translateJSONPlaceholder: string;
   quote: boolean;
   padding: boolean;
   langFileFolderPath: string;
+  promptForOrganize: boolean;
+  ignorePatternForGenerate: string;
 }
 
 /**
@@ -20,23 +23,21 @@ export interface ConfigurationSettings extends vscode.WorkspaceConfiguration {
  * @param document vscode Document
  */
 export function GetKeyAtPositionInDocument(position: vscode.Position, document: vscode.TextDocument) {
-  let htmlRegex = new RegExp(
-    /((\'|\")[^\`\~\!\@\#\%\^\&\*\(\)\=\+\[\{\]\}\\\|\;\:\'\"\,\<\>\/\?\s]+(\"|\')\s?\|\s?translate)/g
-  );
+  let htmlRegex = new RegExp(/((\'|\")[^\`\~\!\@\#\%\^\&\*\(\)\=\+\[\{\]\}\\\|\;\:\'\"\,\<\>\/\?\s]+(\"|\')\s?\|\s?translate)/g);
 
-  if (document.languageId === "typescript") {
+  if (document.languageId === 'typescript') {
     htmlRegex = null;
   }
   const wordRange = document.getWordRangeAtPosition(position, htmlRegex);
-  if (document.languageId === "html" && !wordRange) {
+  if (document.languageId === 'html' && !wordRange) {
     // Return null because the item is not a resource key.
     return { clickedKey: null, range: null };
   }
-  if (document.languageId === "typescript") {
+  if (document.languageId === 'typescript') {
     const ltext = document.lineAt(position.line).text.substr(0, position.character);
-    const ii = ltext.lastIndexOf(".instant(");
-    const gi = ltext.lastIndexOf(".get(");
-    const vi = ltext.lastIndexOf("getI18nValue(");
+    const ii = ltext.lastIndexOf('.instant(');
+    const gi = ltext.lastIndexOf('.get(');
+    const vi = ltext.lastIndexOf('getI18nValue(');
 
     if (!(ii > -1 || gi > -1 || vi > -1)) {
       return { clickedKey: null, range: null };
@@ -53,8 +54,8 @@ export function GetKeyAtPositionInDocument(position: vscode.Position, document: 
   return {
     clickedKey: document
       .getText(wordRange)
-      .replace(/(\'|\"|\s)/g, "")
-      .replace("|translate", ""),
+      .replace(/(\'|\"|\s)/g, '')
+      .replace('|translate', ''),
     range: wordRange,
   };
 }
@@ -65,7 +66,7 @@ export function GetKeyAtPositionInDocument(position: vscode.Position, document: 
  */
 export function FindObjectsForKeyInResourceFiles(key: string, isKey = true) {
   return vscode.workspace
-    .findFiles(getI18nPath(), "**​/node_modules/**")
+    .findFiles(getI18nPath(), '**​/node_modules/**')
     .then((resourceFiles) => {
       return resourceFiles.map((file) => {
         return vscode.workspace.openTextDocument(vscode.Uri.file(file.fsPath)).then((document) => {
@@ -93,16 +94,14 @@ export function FindObjectsForKeyInResourceFiles(key: string, isKey = true) {
  * Returns all the available translation languages
  */
 export function GetAllLanguageFiles() {
-  return vscode.workspace
-    .findFiles(getCurrentVscodeSettings().langFileFolderPath + "**/*.json", "**​/node_modules/**")
-    .then((resourceFiles) => {
-      return resourceFiles.map((rfile) => {
-        return {
-          fileName: rfile.fsPath.split(/(\/|\\)/).pop(),
-          path: rfile.fsPath,
-        };
-      });
+  return vscode.workspace.findFiles(getCurrentVscodeSettings().langFileFolderPath + '**/*.json', '**​/node_modules/**').then((resourceFiles) => {
+    return resourceFiles.map((rfile) => {
+      return {
+        fileName: rfile.fsPath.split(/(\/|\\)/).pop(),
+        path: rfile.fsPath,
+      };
     });
+  });
 }
 
 /**
@@ -113,16 +112,17 @@ export function GetAllLanguageFiles() {
  * @param document The document as vscode.TextDocument.
  */
 function getLineNumberForKeyValueInDocument(search: string, document: vscode.TextDocument, isKey = true) {
-  let keyprefix = "";
+  let keyprefix = '';
+  let ignorePattern = new RegExp(getCurrentVscodeSettings().ignorePatternForGenerate, 'g');
   for (let i = 0; i < document.lineCount; i++) {
     let line = document.lineAt(i);
-    if (line.text.trim().endsWith(",")) {
+    if (line.text.trim().endsWith(',')) {
       const lt = line.text.substring(0, line.text.length - 1);
       const kv = JSON.parse(`{${lt}}`);
       // const matches = key.split(".").reduce((o,k) => (typeof o == "undefined" || o === null) ? o : o[k], kv);
       if (
         (isKey && getTranslationValue(kv, keyprefix.length > 0 ? search.slice(keyprefix.length + 1) : search)) ||
-        (!isKey && (kv[Object.keys(kv).pop()].replace(/\s?\n\s?/g, ' ') === search || kv[Object.keys(kv).pop()].replace(/\s?\n\s?/g, ' ').toLowerCase() === search.toLowerCase()))
+        (!isKey && kv[Object.keys(kv).pop()].replace(ignorePattern, '').toLowerCase() === search.replace(ignorePattern, '').toLowerCase())
       ) {
         return {
           lineNumber: line.lineNumber,
@@ -130,83 +130,17 @@ function getLineNumberForKeyValueInDocument(search: string, document: vscode.Tex
           value: kv[Object.keys(kv).pop()],
         };
       }
-    } else if (line.text.replace(/\s/g, "").endsWith(":{")) {
-      const startingkey = line.text.split(":")[0].replace(/"/g, "").trim();
+    } else if (line.text.replace(/\s/g, '').endsWith(':{')) {
+      const startingkey = line.text.split(':')[0].replace(/"/g, '').trim();
       keyprefix = keyprefix.length > 0 ? `${keyprefix}.${startingkey}` : startingkey;
-    } else if (line.text.replace(/\s/g, "").endsWith("},")) {
-      keyprefix = keyprefix.slice(0, keyprefix.lastIndexOf("."));
+    } else if (line.text.replace(/\s/g, '').endsWith('},')) {
+      keyprefix = keyprefix.slice(0, keyprefix.lastIndexOf('.'));
     }
   }
   return { lineNumber: null, field: null, value: null };
 }
 
-/**
- * Returns Unused translation keys for the selected
- */
-export function zombieCheck(context: vscode.ExtensionContext) {
-  const currentFileName = vscode.window.activeTextEditor.document.fileName;
-  if (!currentFileName.endsWith(".json")) {
-    vscode.window.showWarningMessage("Expected a JSON file.");
-    return;
-  }
-
-  if (vscode.workspace.name === undefined) {
-    vscode.window.showWarningMessage("This extension must be used in a workspace.");
-    return;
-  }
-
-  try {
-    const langDoc = vscode.window.activeTextEditor.document;
-    const text = langDoc.getText();
-    const json = JSON.parse(text.replace(/\r\n/g, "").replace(/\n/g, ""));
-    const keys = getTranslationKeys(json, null, []);
-    vscode.workspace.findFiles("**/*.{ts,js,html}", "**/node_modules/**").then((files) => {
-      let zombies = [...keys];
-      for (let index = 0; index < files.length; index++) {
-        const file = files[index];
-        zombies = findInFile(file, zombies);
-      }
-
-      let unzombified = { ...json };
-      for (let index = 0; index < zombies.length; index++) {
-        const zombie = zombies[index];
-        const zombieKeys = zombie.split(".");
-        const prop = zombieKeys.pop();
-        const parent = zombieKeys.reduce((obj, key) => obj && obj[key], unzombified);
-        if (parent && prop) {
-          delete parent[prop];
-        }
-      }
-      const content = JSON.stringify(unzombified, null, 2);
-      vscode.workspace.openTextDocument({ content }).then(
-        (doc) => {
-          const fileName = langDoc.fileName.replace(vscode.workspace.rootPath, "").substring(1);
-          return vscode.commands.executeCommand("vscode.diff", langDoc.uri, doc.uri, `${fileName} ↔ unzombified`).then(
-            (ok) => {
-              console.log("done");
-            },
-            (err) => {
-              const errorMessage = "Error opening diff editor.";
-              vscode.window.showErrorMessage(errorMessage);
-              console.error(errorMessage, err);
-            }
-          );
-        },
-        (err) => {
-          const errorMessage = "Error opening temporary file.";
-          vscode.window.showErrorMessage(errorMessage);
-          console.error(errorMessage, err);
-        }
-      );
-    });
-  } catch (err) {
-    const errorMessage = "Error while parsing the file: " + currentFileName;
-    vscode.window.showErrorMessage(errorMessage);
-    console.error(errorMessage, err);
-  }
-}
-
-function findInFile(uri: vscode.Uri, keys: string[]): string[] {
+export function updateUnUsedTranslationsInFile(uri: vscode.Uri, keys: string[]): string[] {
   const zombies = [...keys];
   try {
     const data = fs.readFileSync(uri.fsPath);
@@ -222,7 +156,7 @@ function findInFile(uri: vscode.Uri, keys: string[]): string[] {
       }
     }
   } catch (err) {
-    console.error("error while reading file: " + uri.fsPath, err);
+    console.error('error while reading file: ' + uri.fsPath, err);
   }
   return zombies;
 }
@@ -231,23 +165,23 @@ export function getTranslationKeys(obj: Object, cat: string, tKeys: string[]): s
   const currentKeys = [...tKeys];
   for (const key of Object.keys(obj)) {
     const value = obj[key];
-    if (typeof value === "object") {
-      currentKeys.push(...getTranslationKeys(value, cat === null ? key : cat.concat(".", key), tKeys));
+    if (typeof value === 'object') {
+      currentKeys.push(...getTranslationKeys(value, cat === null ? key : cat.concat('.', key), tKeys));
     } else {
-      currentKeys.push(cat === null ? key : cat.concat(".", key));
+      currentKeys.push(cat === null ? key : cat.concat('.', key));
     }
   }
   return currentKeys;
 }
 
-export function getTranslationKeyFromString(input: string, caseMode: string = "snake", autocapitalize: boolean = true) {
-  if (caseMode === "camel") {
+export function getTranslationKeyFromString(input: string, caseMode: string = 'snake', autocapitalize: boolean = true) {
+  if (caseMode === 'camel') {
     return camelize(input);
-  } else if (caseMode === "snake") {
+  } else if (caseMode === 'snake') {
     if (autocapitalize) {
-      return input.toUpperCase().replace(/ /g, "_");
+      return input.toUpperCase().replace(/ /g, '_');
     } else {
-      return input.replace(/ /g, "_");
+      return input.replace(/ /g, '_');
     }
   }
 }
@@ -257,32 +191,48 @@ export function camelize(str: string) {
     .replace(/(?:^\w|[A-Z]|\b\w)/g, function (letter, index) {
       return index === 0 ? letter.toLowerCase() : letter.toUpperCase();
     })
-    .replace(/\s+/g, "");
+    .replace(/\s+/g, '');
 }
 
 export function getCurrentVscodeSettings(): ConfigurationSettings {
-  return vscode.workspace.getConfiguration("ngx-translate-utils") as ConfigurationSettings;
+  return vscode.workspace.getConfiguration('ngx-translate-utils') as ConfigurationSettings;
 }
 
 export function getI18nPath() {
   const settings = getCurrentVscodeSettings();
-  return settings.langFileFolderPath + (settings.includeAll ? "**/*" : settings.defaultLang) + ".json";
+  return settings.langFileFolderPath + (settings.includeAll ? '**/*' : settings.defaultLang) + '.json';
 }
 
 export function getTranslationValue(target: any, key: string): string {
-  let keys = typeof key === "string" ? key.split(".") : [key];
-  key = "";
+  let keys = typeof key === 'string' ? key.split('.') : [key];
+  key = '';
   do {
     key += keys.shift();
-    if (!!target && !!target[key] && (typeof target[key] === "object" || !keys.length)) {
+    if (!!target && !!target[key] && (typeof target[key] === 'object' || !keys.length)) {
       target = target[key];
-      key = "";
+      key = '';
     } else if (!keys.length) {
       target = undefined;
     } else {
-      key += ".";
+      key += '.';
     }
   } while (keys.length);
 
   return target;
+}
+
+export function tryParseJSON(jsonString) {
+  try {
+    var o = JSON.parse(jsonString);
+
+    // Handle non-exception-throwing cases:
+    // Neither JSON.parse(false) or JSON.parse(1234) throw errors, hence the type-checking,
+    // but... JSON.parse(null) returns null, and typeof null === "object",
+    // so we must check for that, too. Thankfully, null is falsey, so this suffices:
+    if (o && typeof o === 'object') {
+      return o;
+    }
+  } catch (e) {}
+
+  return false;
 }

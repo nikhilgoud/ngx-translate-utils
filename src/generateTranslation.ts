@@ -1,11 +1,6 @@
-import * as copypaste from "copy-paste";
-import * as vscode from "vscode";
-import {
-  getCurrentVscodeSettings,
-  getTranslationKeyFromString,
-  ConfigurationSettings,
-  FindObjectsForKeyInResourceFiles,
-} from "./utils";
+import * as copypaste from 'copy-paste';
+import * as vscode from 'vscode';
+import { getCurrentVscodeSettings, getTranslationKeyFromString, ConfigurationSettings, FindObjectsForKeyInResourceFiles } from './utils';
 
 export async function generateTranslationString(context: vscode.ExtensionContext) {
   const settings: ConfigurationSettings = getCurrentVscodeSettings();
@@ -13,23 +8,23 @@ export async function generateTranslationString(context: vscode.ExtensionContext
   // Get the active editor window
   const editor = vscode.window.activeTextEditor;
   if (!editor) {
-    vscode.window.showWarningMessage("Select text to translate");
+    vscode.window.showWarningMessage('Select text to translate');
     return;
   }
   // Fetch the selected text
   const selectedText = editor.document.getText(editor.selection);
   if (!selectedText) {
-    vscode.window.showInformationMessage("Select text to translate");
+    vscode.window.showInformationMessage('Select text to translate');
     return;
   }
 
-  return FindObjectsForKeyInResourceFiles(selectedText.replace(/\s?\\n\s?/g, ' '), false).then(async (foundObjects) => {
+  return FindObjectsForKeyInResourceFiles(selectedText, false).then(async (foundObjects) => {
     let input = foundObjects && foundObjects.length > 0 && foundObjects[0].key;
     if (!input) {
       const key = getTranslationKeyFromString(selectedText, settings.caseMode, settings.autocapitalize);
       input = await vscode.window.showInputBox({
         value: key,
-        prompt: "Gets key from default lang file, Modify key for this translation or leave blank to use value",
+        prompt: 'Gets key from default lang file, Modify key for this translation or leave blank to use value',
         placeHolder: 'e.g. "hello world" will generate a key named "HELLO_WORLD"',
       });
       if (input === undefined) {
@@ -46,13 +41,15 @@ export async function generateTranslationString(context: vscode.ExtensionContext
       let editorRange: any = editor.selection;
       if (settings.replaceOnTranslate) {
         // Replace the selection text with the translated key
-        const padding = settings.padding ? " " : "";
+        const padding = settings.padding ? ' ' : '';
         const quote = settings.quote;
-        let translation = "";
-        if (editor.document.languageId === "html") {
+        let translation = '';
+        if (editor.document.languageId === 'html') {
           translation = `{{${padding}${quote}${key}${quote} | ${settings.translatePipeName}${padding}}}`;
+        } else if (editor.document.languageId === 'json') {
+          translation = settings.translateJSONPlaceholder.replace('{key}', key);
         } else {
-          translation = settings.translatePlaceholder.replace("{key}", `${quote}${key}${quote}`);
+          translation = settings.translatePlaceholder.replace('{key}', `${quote}${key}${quote}`);
           editorRange = new vscode.Range(
             new vscode.Position(editor.selection.start.line, editor.selection.start.character - 1),
             new vscode.Position(editor.selection.end.line, editor.selection.end.character + 1)
@@ -64,16 +61,11 @@ export async function generateTranslationString(context: vscode.ExtensionContext
           })
           .then((_) => {
             const index = editor.document.lineAt(editor.selection.start.line).text.indexOf(translation);
-            editor.selection = new vscode.Selection(
-              editor.selection.start.line,
-              index,
-              editor.selection.end.line,
-              index + translation.length
-            );
+            editor.selection = new vscode.Selection(editor.selection.start.line, index, editor.selection.end.line, index + translation.length);
           });
       }
     } catch (error) {
-      console.error("Replace Key Failed", error);
+      console.error('Replace Key Failed', error);
     }
   });
 }
