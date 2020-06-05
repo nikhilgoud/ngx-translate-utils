@@ -5,7 +5,7 @@ import { getCurrentVscodeSettings, getI18nPath, getTranslationValue, tryParseJSO
  * Sync lang files line by line to maintain easy navigation of keys
  */
 export async function organizeLangFile(context: vscode.ExtensionContext) {
-  const currentFileName = vscode.window.activeTextEditor.document.fileName;
+  const currentFileName = vscode.window.activeTextEditor!.document.fileName;
   if (!currentFileName.endsWith('.json')) {
     vscode.window.showWarningMessage('Expected a JSON file.');
     return;
@@ -17,8 +17,14 @@ export async function organizeLangFile(context: vscode.ExtensionContext) {
   }
 
   try {
-    const langDoc = vscode.window.activeTextEditor.document;
-    if (getCurrentVscodeSettings().defaultLang === langDoc.fileName.split(/(\/|\\)/).pop()) {
+    const langDoc = vscode.window.activeTextEditor!.document;
+    if (
+      getCurrentVscodeSettings().defaultLang ===
+      langDoc.fileName
+        .split(/(\/|\\)/)
+        .pop()
+        ?.replace('.json', '')
+    ) {
       vscode.window.showWarningMessage('Select file other than default language file.');
       return;
     }
@@ -29,35 +35,34 @@ export async function organizeLangFile(context: vscode.ExtensionContext) {
     let needChanges = false;
     let keyprefix = '',
       content = '{',
-      i = 0,
       j = 0;
-    let found = false,
-      pfound = false;
+    let pfound = false;
 
     while (!needChanges && j < langDoc.lineCount) {
       const line = langDoc.lineAt(j).text;
-      const bline = bdoc.lineAt(j).text;
+      // const bline = bdoc.lineAt(j).text;
       if (line.replace(/\s/g, '').endsWith(':{')) {
         const startingkey = line.split(':')[0].replace(/"/g, '').trim();
         keyprefix = keyprefix.length > 0 ? `${keyprefix}.${startingkey}` : startingkey;
-      } else if (line.replace(/\s/g, '').endsWith('}')) {
-        keyprefix = keyprefix.slice(0, keyprefix.lastIndexOf('.') - 1);
+      } else if (line.replace(/\s/g, '').endsWith('}') || line.replace(/\s/g, '').endsWith('},')) {
+        keyprefix = keyprefix.slice(0, keyprefix.lastIndexOf('.') > -1 ? keyprefix.lastIndexOf('.') : 0);
         pfound = !!getTranslationValue(ljson, keyprefix);
       } else if (`${keyprefix}.${langDoc.lineAt(j).text.split(':')[0].trim()}` !== `${keyprefix}.${bdoc.lineAt(j).text.split(':')[0].trim()}`) {
         needChanges = true;
       }
-      j++;/*  */
+      j++; /*  */
     }
 
     if (!needChanges) {
       vscode.window.showInformationMessage('Language file already synced with base.');
       return true;
     }
+    keyprefix = '';
     for (let i = 0; i < bdoc.lineCount; i++) {
       let line = bdoc.lineAt(i).text;
       const bkey = line.split(':')[0];
       const val = ljson[bkey.trim().replace(/"/g, '')];
-      const langKey = langDoc.lineAt(j).text.split(':')[0].trim();
+      // const langKey = langDoc.lineAt(j).text.split(':')[0].trim();
 
       if (line.replace(/\s/g, '').endsWith(':{')) {
         const startingkey = line.split(':')[0].replace(/"/g, '').trim();
@@ -67,9 +72,9 @@ export async function organizeLangFile(context: vscode.ExtensionContext) {
         } else {
           pfound = true;
         }
-      } else if (line.replace(/\s/g, '').endsWith('}')) {
-        keyprefix = keyprefix.slice(0, keyprefix.lastIndexOf('.') - 1);
-        pfound = !!getTranslationValue(ljson, keyprefix);
+      } else if (line.replace(/\s/g, '').endsWith('}') || line.replace(/\s/g, '').endsWith('},')) {
+        keyprefix = keyprefix.slice(0, keyprefix.lastIndexOf('.') > -1 ? keyprefix.lastIndexOf('.') : 0);
+        pfound = keyprefix ? !!getTranslationValue(ljson, keyprefix) : true;
       }
       let lt = line;
       if (line.trim().endsWith(',')) {
@@ -86,26 +91,30 @@ export async function organizeLangFile(context: vscode.ExtensionContext) {
         if (typeof lv === 'string') {
           line = `${line.split(':')[0]}: "${lv.replace(/\n|\r|\r\n/g, '\\n').replace(/"/g, '\\"')}"`;
         }
-      } else if (pfound && (line.replace(/\s/g, '').endsWith(':{') || line.replace(/\s/g, '').endsWith('}'))) {
+      } else if (
+        pfound &&
+        (line.replace(/\s/g, '').endsWith(':{') || line.replace(/\s/g, '').endsWith('}') || line.replace(/\s/g, '').endsWith('},'))
+      ) {
         // terminal chars(open/closing obj field)
         appendLine = true;
       }
 
       if (appendLine) {
-        content = `${content}${i == 1 || line.trim() === '}' || line.trim().endsWith('{') ? '' : ','}${i == 0 ? '' : '\r\n'}${line}`;
+        content = `${content}${
+          i == 1 
+          || line.trim() === '},' || line.trim() === '}' 
+          || content.trim().endsWith('{') || content.trim().endsWith(',') ? '' : ','
+        }${i == 0 ? '' : '\r\n'}${line}`;
       }
     }
     content = `${content}\r\n}`;
 
     let prompt = false;
-    if (needChanges && !getCurrentVscodeSettings().promptForOrganize && !context.workspaceState.get('organizeFileForMissingCheck')) {
+    if (!getCurrentVscodeSettings().promptForOrganize && !context.workspaceState.get('organizeFileForMissingCheck')) {
       fs.writeFileSync(langDoc.uri.fsPath, content);
       context.workspaceState.update('organizeFileForMissingCheck', 'Done');
       return vscode.window.showInformationMessage('Language file synced with base.');
-    } else if (
-      (needChanges && context.workspaceState.get('organizeFileForMissingCheck')) ||
-      !context.workspaceState.get('organizeFileForMissingCheck')
-    ) {
+    } else if (context.workspaceState.get('organizeFileForMissingCheck')) {
       const target = await vscode.window.showQuickPick(
         [
           { label: 'Save', description: 'Save file with modified changes' },
@@ -133,7 +142,7 @@ export async function organizeLangFile(context: vscode.ExtensionContext) {
     if (prompt) {
       return vscode.workspace.openTextDocument({ content }).then(
         (doc) => {
-          const fileName = langDoc.fileName.replace(vscode.workspace.rootPath, '').substring(1);
+          const fileName = langDoc.fileName.replace(vscode.workspace.rootPath || '', '').substring(1);
           return vscode.commands.executeCommand('vscode.diff', langDoc.uri, doc.uri, `Old ${fileName} ↔ Organized`).then(
             (ok) => {
               console.log('done');

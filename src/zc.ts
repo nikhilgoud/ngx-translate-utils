@@ -5,7 +5,7 @@ import { getTranslationKeys, updateUnUsedTranslationsInFile } from './utils';
  * Returns Unused translation keys for the selected
  */
 export function zombieCheck(context: vscode.ExtensionContext) {
-  const currentFileName = vscode.window.activeTextEditor.document.fileName;
+  const currentFileName = vscode.window.activeTextEditor!.document.fileName;
   if (!currentFileName.endsWith('.json')) {
     vscode.window.showWarningMessage('Expected a JSON file.');
     return;
@@ -17,7 +17,7 @@ export function zombieCheck(context: vscode.ExtensionContext) {
   }
 
   try {
-    const langDoc = vscode.window.activeTextEditor.document;
+    const langDoc = vscode.window.activeTextEditor!.document;
     const text = langDoc.getText();
     const json = JSON.parse(text.replace(/\r\n/g, '').replace(/\n/g, ''));
     const keys = getTranslationKeys(json, null, []);
@@ -33,7 +33,7 @@ export function zombieCheck(context: vscode.ExtensionContext) {
           zombies = updateUnUsedTranslationsInFile(file, zombies);
         }
 
-        let unzombified = { ...json };
+        const unzombified = { ...json };
         for (let index = 0; index < zombies.length; index++) {
           const zombie = zombies[index];
           const zombieKeys = zombie.split('.');
@@ -46,7 +46,7 @@ export function zombieCheck(context: vscode.ExtensionContext) {
         const content = JSON.stringify(unzombified, null, 2);
         vscode.workspace.openTextDocument({ content }).then(
           (doc) => {
-            const fileName = langDoc.fileName.replace(vscode.workspace.rootPath, '').substring(1);
+            const fileName = langDoc.fileName.replace(vscode.workspace.rootPath || '', '').substring(1);
             return vscode.commands.executeCommand('vscode.diff', langDoc.uri, doc.uri, `${fileName} ↔ unzombified`).then(
               (ok) => {
                 console.log('done');

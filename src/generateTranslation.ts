@@ -1,4 +1,4 @@
-import * as copypaste from 'copy-paste';
+import * as clipboardy from 'clipboardy';
 import * as vscode from 'vscode';
 import { getCurrentVscodeSettings, getTranslationKeyFromString, ConfigurationSettings, FindObjectsForKeyInResourceFiles } from './utils';
 
@@ -37,7 +37,7 @@ export async function generateTranslationString(context: vscode.ExtensionContext
       // Generate a json key/value pair
       const value = `"${key}": "${selectedText}"`;
       // Copy the translation json to the clipboard
-      copypaste.copy(value);
+      clipboardy.write(value);
       let editorRange: any = editor.selection;
       if (settings.replaceOnTranslate) {
         // Replace the selection text with the translated key
@@ -47,7 +47,7 @@ export async function generateTranslationString(context: vscode.ExtensionContext
         if (editor.document.languageId === 'html') {
           translation = `{{${padding}${quote}${key}${quote} | ${settings.translatePipeName}${padding}}}`;
         } else if (editor.document.languageId === 'json') {
-          translation = settings.translateJSONPlaceholder.replace('{key}', key);
+          translation = settings.translateJSONPlaceholder.replace('{key}', key || '');
         } else {
           translation = settings.translatePlaceholder.replace('{key}', `${quote}${key}${quote}`);
           editorRange = new vscode.Range(

@@ -8,6 +8,8 @@ import { generateTranslationString } from './generateTranslation';
 import { missingCheck } from './mt';
 import { organizeLangFile } from './sp';
 
+let disposables: vscode.Disposable[] = [];
+
 export function activate(context: vscode.ExtensionContext) {
   // missed keys
   const checkForMissed = vscode.commands.registerCommand('ngxu.missed', () => missingCheck(context));
@@ -60,4 +62,9 @@ export function activate(context: vscode.ExtensionContext) {
   );
 }
 
-export function deactivate() {}
+export function deactivate() {
+  if (disposables) {
+    disposables.forEach((item) => item.dispose());
+  }
+  disposables = [];
+}

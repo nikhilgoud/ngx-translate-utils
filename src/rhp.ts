@@ -13,7 +13,7 @@ export class ResourceHoverProvider implements HoverProvider {
         // Return null because the clicked key was not found in any resource files.
         return null;
       }
-      let md = new MarkdownString();
+      const md = new MarkdownString();
       md.appendMarkdown(`\`${clickedKey}\``);
       md.appendText("\n");
       md.appendMarkdown('***');
@@ -23,7 +23,7 @@ export class ResourceHoverProvider implements HoverProvider {
         let cc = "";
         if (l.match) {
           // let openCommandUri = Uri.parse(`command:open?${encodeURIComponent(JSON.stringify([{ resource: ff.uri }]))}`);
-          let openCommandUri = "";
+          // let openCommandUri = "";
           // cc = `[${l.path.split("/").pop()}](${openCommandUri}) - ${l.value}`;
           cc = `${l.fileName} - \`\`\`${l.value}\`\`\``;
         } else {

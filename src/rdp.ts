@@ -15,7 +15,7 @@ export class ResourceDefinitionProvider implements DefinitionProvider {
       }
 
       // Return a location per match.
-      let locations = new Array<Location>();
+      const locations = new Array<Location>();
       foundObjects.forEach((object) => {
         locations.push(new Location(Uri.file(object.path), new Position(object.lineNumber, 0)));
       });

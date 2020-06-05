@@ -23,15 +23,15 @@ export interface ConfigurationSettings extends vscode.WorkspaceConfiguration {
  * @param document vscode Document
  */
 export function GetKeyAtPositionInDocument(position: vscode.Position, document: vscode.TextDocument) {
-  let htmlRegex = new RegExp(/((\'|\")[^\`\~\!\@\#\%\^\&\*\(\)\=\+\[\{\]\}\\\|\;\:\'\"\,\<\>\/\?\s]+(\"|\')\s?\|\s?translate)/g);
+  let htmlRegex: any = new RegExp(/(('|")[^`~!@#%^&*()=+[{\]}\\|;:'",<>/?\s]+("|')\s?\|\s?translate)/g);
 
   if (document.languageId === 'typescript') {
-    htmlRegex = null;
+    htmlRegex = undefined;
   }
   const wordRange = document.getWordRangeAtPosition(position, htmlRegex);
   if (document.languageId === 'html' && !wordRange) {
     // Return null because the item is not a resource key.
-    return { clickedKey: null, range: null };
+    return { clickedKey: '', range: undefined };
   }
   if (document.languageId === 'typescript') {
     const ltext = document.lineAt(position.line).text.substr(0, position.character);
@@ -40,21 +40,21 @@ export function GetKeyAtPositionInDocument(position: vscode.Position, document: 
     const vi = ltext.lastIndexOf('getI18nValue(');
 
     if (!(ii > -1 || gi > -1 || vi > -1)) {
-      return { clickedKey: null, range: null };
+      return { clickedKey: '', range: undefined };
     }
     // const ni = [ii, gi, vi].reduce((p, c) => (Math.abs(c - position.character) < Math.abs(p - position.character) ? c : p));
-    let nstart = new vscode.Position(position.line, ltext.lastIndexOf("'") + 1);
-    let nend = new vscode.Position(
+    const nstart = new vscode.Position(position.line, ltext.lastIndexOf("'") + 1);
+    const nend = new vscode.Position(
       position.line,
       position.character + document.lineAt(position.line).text.substring(position.character).indexOf("'")
     );
-    let newRange = new vscode.Range(nstart, nend);
+    const newRange = new vscode.Range(nstart, nend);
     return { clickedKey: document.getText(newRange), range: newRange };
   }
   return {
     clickedKey: document
       .getText(wordRange)
-      .replace(/(\'|\"|\s)/g, '')
+      .replace(/('|"|\s)/g, '')
       .replace('|translate', ''),
     range: wordRange,
   };
@@ -64,7 +64,7 @@ export function GetKeyAtPositionInDocument(position: vscode.Position, document: 
  * Returns a promise for an array of objects found for a given key. Searches through .json files in src/assets.
  * @param key String value for the key to find. Ex: "resource.login.title".
  */
-export function FindObjectsForKeyInResourceFiles(key: string, isKey = true) {
+export function FindObjectsForKeyInResourceFiles(key: string, isKey = true, isDp = false) {
   return vscode.workspace
     .findFiles(getI18nPath(), '**​/node_modules/**')
     .then((resourceFiles) => {
@@ -85,7 +85,7 @@ export function FindObjectsForKeyInResourceFiles(key: string, isKey = true) {
     })
     .then((mappedResourceFiles) => {
       return Promise.all(mappedResourceFiles).then((fileObjects) => {
-        return fileObjects.filter((object) => getCurrentVscodeSettings().includeAll || object.match);
+        return fileObjects.filter((object) => !isDp || getCurrentVscodeSettings().includeAll || object.match);
       });
     });
 }
@@ -113,31 +113,32 @@ export function GetAllLanguageFiles() {
  */
 function getLineNumberForKeyValueInDocument(search: string, document: vscode.TextDocument, isKey = true) {
   let keyprefix = '';
-  let ignorePattern = new RegExp(getCurrentVscodeSettings().ignorePatternForGenerate, 'g');
+  const ignorePattern = new RegExp(getCurrentVscodeSettings().ignorePatternForGenerate, 'g');
   for (let i = 0; i < document.lineCount; i++) {
-    let line = document.lineAt(i);
-    if (line.text.trim().endsWith(',')) {
-      const lt = line.text.substring(0, line.text.length - 1);
-      const kv = JSON.parse(`{${lt}}`);
+    const line = document.lineAt(i);
+
+    if (line.text.trim().endsWith('",') || line.text.trim().endsWith('"')) {
+      const lt = line.text.trim().endsWith(',') ? line.text.substring(0, line.text.length - 1) : line.text;
+      const kv: { [key: string]: string } = tryParseJSON(`{${lt}}`);
       // const matches = key.split(".").reduce((o,k) => (typeof o == "undefined" || o === null) ? o : o[k], kv);
       if (
         (isKey && getTranslationValue(kv, keyprefix.length > 0 ? search.slice(keyprefix.length + 1) : search)) ||
-        (!isKey && kv[Object.keys(kv).pop()].replace(ignorePattern, '').toLowerCase() === search.replace(ignorePattern, '').toLowerCase())
+        (!isKey && Object.entries(kv)[0][1].replace(ignorePattern, '').toLowerCase() === search.replace(ignorePattern, '').toLowerCase())
       ) {
         return {
           lineNumber: line.lineNumber,
           field: keyprefix ? `${keyprefix}.${Object.keys(kv).pop()}` : Object.keys(kv).pop(),
-          value: kv[Object.keys(kv).pop()],
+          value: Object.entries(kv)[0][1],
         };
       }
     } else if (line.text.replace(/\s/g, '').endsWith(':{')) {
       const startingkey = line.text.split(':')[0].replace(/"/g, '').trim();
       keyprefix = keyprefix.length > 0 ? `${keyprefix}.${startingkey}` : startingkey;
-    } else if (line.text.replace(/\s/g, '').endsWith('},')) {
-      keyprefix = keyprefix.slice(0, keyprefix.lastIndexOf('.'));
+    } else if (line.text.replace(/\s/g, '').endsWith('}') || line.text.replace(/\s/g, '').endsWith('},')) {
+      keyprefix = keyprefix.slice(0, keyprefix.lastIndexOf('.') > -1 ? keyprefix.lastIndexOf('.') : 0);
     }
   }
-  return { lineNumber: null, field: null, value: null };
+  return { lineNumber: 0, field: '', value: '' };
 }
 
 export function updateUnUsedTranslationsInFile(uri: vscode.Uri, keys: string[]): string[] {
@@ -161,20 +162,20 @@ export function updateUnUsedTranslationsInFile(uri: vscode.Uri, keys: string[]):
   return zombies;
 }
 
-export function getTranslationKeys(obj: Object, cat: string, tKeys: string[]): string[] {
+export function getTranslationKeys(obj: any, cat: string | null | undefined, tKeys: string[]): string[] {
   const currentKeys = [...tKeys];
   for (const key of Object.keys(obj)) {
     const value = obj[key];
     if (typeof value === 'object') {
-      currentKeys.push(...getTranslationKeys(value, cat === null ? key : cat.concat('.', key), tKeys));
+      currentKeys.push(...getTranslationKeys(value, cat === null ? key : cat!.concat('.', key), tKeys));
     } else {
-      currentKeys.push(cat === null ? key : cat.concat('.', key));
+      currentKeys.push(cat === null ? key : cat!.concat('.', key));
     }
   }
   return currentKeys;
 }
 
-export function getTranslationKeyFromString(input: string, caseMode: string = 'snake', autocapitalize: boolean = true) {
+export function getTranslationKeyFromString(input: string, caseMode = 'snake', autocapitalize = true) {
   if (caseMode === 'camel') {
     return camelize(input);
   } else if (caseMode === 'snake') {
@@ -204,7 +205,7 @@ export function getI18nPath() {
 }
 
 export function getTranslationValue(target: any, key: string): string {
-  let keys = typeof key === 'string' ? key.split('.') : [key];
+  const keys = typeof key === 'string' ? key.split('.') : [key];
   key = '';
   do {
     key += keys.shift();
@@ -221,9 +222,9 @@ export function getTranslationValue(target: any, key: string): string {
   return target;
 }
 
-export function tryParseJSON(jsonString) {
+export function tryParseJSON(jsonString: string) {
   try {
-    var o = JSON.parse(jsonString);
+    const o = JSON.parse(jsonString);
 
     // Handle non-exception-throwing cases:
     // Neither JSON.parse(false) or JSON.parse(1234) throw errors, hence the type-checking,
@@ -232,7 +233,9 @@ export function tryParseJSON(jsonString) {
     if (o && typeof o === 'object') {
       return o;
     }
-  } catch (e) {}
+  } catch (e) {
+    return false;
+  }
 
   return false;
 }
