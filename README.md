@@ -1,14 +1,17 @@
 # ngx-translate-utils
 
-This extension should be used with angular translation library [ngx-translate](https://github.com/ngx-translate/core).  
+This extension should be used in an Angular project that uses angular translation library [ngx-translate](https://github.com/ngx-translate/core) [@ngx-translate](https://www.npmjs.com/package/@ngx-translate/core).
 
 
-![Demo](assets/rdp.gif) 
+![ts hover info image](assets/rdp.gif)  
 
-[Link to VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=nikhilgoud.ngx-translate-utils)
-This is created using the existing extensions  
-[ngx-translate-zombies](https://github.com/seveves/ngx-translate-zombies)  
-[resource-peek](https://github.com/Hademar/resource-peek/)  
+![html hover info image](assets/rdpts.gif)
+
+[Link to VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=nikhilgoud.ngx-translate-utils)  
+
+This is created using the existing extensions 
+[ngx-translate-zombies](https://github.com/seveves/ngx-translate-zombies) 
+[resource-peek](https://github.com/Hademar/resource-peek/) 
 [ngx-translate-quickcreate](https://github.com/NextFaze/ngx-translate-quickcreate)
  
 
