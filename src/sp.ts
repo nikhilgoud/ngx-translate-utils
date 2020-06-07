@@ -99,15 +99,13 @@ export async function organizeLangFile(context: vscode.ExtensionContext) {
         appendLine = true;
       }
 
-      if (appendLine) {
+      if (appendLine || line.trim() === '') {
         content = `${content}${
-          i == 1 
-          || line.trim() === '},' || line.trim() === '}' 
-          || content.trim().endsWith('{') || content.trim().endsWith(',') ? '' : ','
+          line.trim() === '' || line.trim() === '},' || line.trim() === '}' || content.trim().endsWith('{') || content.trim().endsWith(',') ? '' : ','
         }${i == 0 ? '' : '\r\n'}${line}`;
       }
     }
-    content = `${content}\r\n}`;
+    // content = `${content}\r\n}`;
 
     let prompt = false;
     if (!getCurrentVscodeSettings().promptForOrganize && !context.workspaceState.get('organizeFileForMissingCheck')) {
@@ -144,9 +142,7 @@ export async function organizeLangFile(context: vscode.ExtensionContext) {
         (doc) => {
           const fileName = langDoc.fileName.replace(vscode.workspace.rootPath || '', '').substring(1);
           return vscode.commands.executeCommand('vscode.diff', langDoc.uri, doc.uri, `Old ${fileName} ↔ Organized`).then(
-            (ok) => {
-              console.log('done');
-            },
+            (ok) => null,
             (err) => {
               const errorMessage = 'Error opening diff editor.';
               vscode.window.showErrorMessage(errorMessage);

@@ -175,6 +175,30 @@ export function getTranslationKeys(obj: any, cat: string | null | undefined, tKe
   return currentKeys;
 }
 
+export function getTranslationKeysInOrder(doc: vscode.TextDocument): string[] {
+  let keyprefix = '';
+  const currentKeys = [];
+  for (let i = 0; i < doc.lineCount; i++) {
+    let line = doc.lineAt(i).text;
+    // const bline = bdoc.lineAt(j).text;
+    if (line.replace(/\s/g, '').endsWith(':{')) {
+      const startingkey = line.split(':')[0].replace(/"/g, '').trim();
+      keyprefix = keyprefix.length > 0 ? `${keyprefix}.${startingkey}` : startingkey;
+    } else if (line.replace(/\s/g, '').endsWith('}') || line.replace(/\s/g, '').endsWith('},')) {
+      keyprefix = keyprefix.slice(0, keyprefix.lastIndexOf('.') > -1 ? keyprefix.lastIndexOf('.') : 0);
+    }
+
+    if (line.trim().endsWith(',')) {
+      line = line.substring(0, line.length - 1);
+    }
+    const kv = line.trim() !== '' && tryParseJSON(`{${line}}`);
+    if (kv) {
+      currentKeys.push(keyprefix ? `${keyprefix}.${Object.entries(kv)[0][0]}` : Object.entries(kv)[0][0]);
+    }
+  }
+  return currentKeys;
+}
+
 export function getTranslationKeyFromString(input: string, caseMode = 'snake', autocapitalize = true) {
   if (caseMode === 'camel') {
     return camelize(input);

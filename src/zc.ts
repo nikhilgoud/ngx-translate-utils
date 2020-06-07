@@ -48,13 +48,10 @@ export function zombieCheck(context: vscode.ExtensionContext) {
           (doc) => {
             const fileName = langDoc.fileName.replace(vscode.workspace.rootPath || '', '').substring(1);
             return vscode.commands.executeCommand('vscode.diff', langDoc.uri, doc.uri, `${fileName} ↔ unzombified`).then(
-              (ok) => {
-                console.log('done');
-              },
+              (ok) => null,
               (err) => {
-                const errorMessage = 'Error opening diff editor.';
-                vscode.window.showErrorMessage(errorMessage);
-                console.error(errorMessage, err);
+                vscode.window.showErrorMessage('Error opening diff editor.');
+                console.error('Error', err);
               }
             );
           },

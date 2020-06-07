@@ -14,4 +14,13 @@ Initial features added
 - Default language support
 - convert selected hardcoded text into a ngx-translate string and pipe.
 
+## 0.0.11
+- Bug Fixes & Improvements.
+- New commands for syncing: 
+    - organize: organize keys in selected lang file with base file
+    - missed: find missed translations in selected lang file with base file
+- Added json file support for generate translation snippet.
 
+## 0.1.1
+- Major Release 
+- Bug Fixes & Improvements.

@@ -1,13 +1,19 @@
 # ngx-translate-utils
 
-This extension should be used in an Angular project that uses angular translation library [ngx-translate](https://github.com/ngx-translate/core) [@ngx-translate](https://www.npmjs.com/package/@ngx-translate/core).
+This extension should be used in an Angular project that uses angular translation library [ngx-translate](https://github.com/ngx-translate/core) [@ngx-translate](https://www.npmjs.com/package/@ngx-translate/core).  
 
+[Link to VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=nikhilgoud.ngx-translate-utils)  
 
 ![ts hover info image](assets/rdp.gif)  
 
 ![html hover info image](assets/rdpts.gif)
 
-[Link to VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=nikhilgoud.ngx-translate-utils)  
+![organize image](assets/org.gif)
+
+![missing image](assets/mt.gif)
+
+![unused image](assets/uu.gif)
+
 
 This is created using the existing extensions 
 [ngx-translate-zombies](https://github.com/seveves/ngx-translate-zombies) 
@@ -59,25 +65,4 @@ Angular project with ngx-translate
 
 
 ## Release Notes
-
-## 0.0.1  
-Initial features added
-- Unused keys from selected language json file in diff window  
-- Displays values from all language files  
-- Provides keys for autocomplete
-- peek all translation files on ctrl+click.
-
-## 0.0.10
-- Bug Fixes & Improvements.
-- Added vscode settings support.
-- Default language support
-- convert selected hardcoded text into a ngx-translate string and pipe.
-
-## 0.0.11
-- Bug Fixes & Improvements.
-- New commands for syncing: 
-    - organize: organize keys in selected lang file with base file
-    - missed: find missed translations in selected lang file with base file
-- Added json file support for generate translation snippet.
-
-
+[CHANGELOG](CHANGELOG.md)

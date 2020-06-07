@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { getTranslationKeys, getI18nPath, getCurrentVscodeSettings } from './utils';
+import { getI18nPath, getCurrentVscodeSettings, getTranslationKeysInOrder } from './utils';
 import { organizeLangFile } from './sp';
 /**
  * Returns Unused translation keys for the selected
@@ -30,55 +30,48 @@ export async function missingCheck(context: vscode.ExtensionContext) {
     }
     const baseLangDocs = await vscode.workspace.findFiles(getI18nPath());
     const bdoc = await vscode.workspace.openTextDocument(baseLangDocs[0]);
-    const text = langDoc.getText();
-    const json = JSON.parse(text.replace(/\r\n/g, ''));
-    const basejson = JSON.parse(bdoc.getText());
-    const keys = getTranslationKeys(json, null, []);
-    const baseKeys = getTranslationKeys(basejson, null, []);
+    const keys = getTranslationKeysInOrder(langDoc);
+    const baseKeys = getTranslationKeysInOrder(bdoc);
 
     const allMissingKeys = baseKeys.filter((b) => keys.indexOf(b) === -1);
-    // vscode.workspace.findFiles("**/*.{ts,js,html}", "**/node_modules/**").then((files) => {
-    //   let zombies = [...keys];
-    //   for (let index = 0; index < files.length; index++) {
-    //     const file = files[index];
-    //     zombies = updateUnUsedTranslationsInFile(file, zombies);
-    //   }
-    // for (let i = 0; i < bdoc.lineCount; i++) {
-    //   let line = bdoc.lineAt(i).text;
-    //   if (line.replace(/\s/g, "").endsWith(":{")) {
-    //     const startingkey = line.split(":")[0].replace(/"/g, "").trim();
-    //     keyprefix = keyprefix.length > 0 ? `${keyprefix}.${startingkey}` : startingkey;
-    //   } else if (line.replace(/\s/g, "").endsWith("}")) {
-    //     keyprefix = keyprefix.slice(0, keyprefix.lastIndexOf("."));
-    //   } else if (!line.replace(/\s/g, "").endsWith("{")) {
-    //     let lt = line;
-    //     if (line.trim().endsWith(",")) {
-    //       lt = line.substring(0, line.length - 1);
-    //     }
-    //     const kv = JSON.parse(`{${lt}}`);
-    //     const fk = keyprefix ? `${keyprefix}.${Object.keys(kv).pop()}` : Object.keys(kv).pop();
-    //     if (allMissingKeys.indexOf(fk) !== -1) {
-    //       line = `${line.split(":")[0]}: ${getTranslationValue(json, fk)
-    //         .replace(/\n|\r|\r\n/g, "\\n")
-    //         .replace(/"/g, '\\"')}`;
-    //     }
-    //   }
-    //   content = `${content}${vscode.EndOfLine.CRLF}${line}`;
-    // }
-
-    // Organize check
-    await context.workspaceState.update('organizeFileForMissingCheck', true);
-    const isOrganised = await organizeLangFile(context);
-
-    if (!isOrganised) {
-      return vscode.window.showErrorMessage(
-        `Total missing translations ${allMissingKeys.length}. Lang file not properly organized with base to displau diff window.`
-      );
-    }
-
-    let content = '',
-      i = 0,
+    let organised = false;
+    let i = 0,
       j = 0;
+    while (i < keys.length && j < baseKeys.length) {
+      if (keys[i] === baseKeys[j]) {
+        i++;
+        j++;
+      } else {
+        j++;
+      }
+    }
+    if (i === keys.length) {
+      organised = true;
+    }
+    // Organize check
+    if (!organised) {
+      await context.workspaceState.update('organizeFileForMissingCheck', true);
+
+      const target = await vscode.window.showQuickPick(
+        [
+          { label: 'Organize with Base', description: 'Organize translations in this file with base language file' },
+          { label: 'Cancel', description: '' },
+        ],
+        { placeHolder: `File s not organized, select yes to organise. Total missing translations ${allMissingKeys.length}.` }
+      );
+
+      if (!target || target.label === 'Cancel') {
+        vscode.window.showErrorMessage(
+          `Total missing translations ${allMissingKeys.length}. Lang file not properly organized with base to display diff window.`
+        );
+        return false;
+      } else {
+        return organizeLangFile(context);
+      }
+    }
+    let content = '';
+    i = 0;
+    j = 0;
     while (i < bdoc.lineCount && j < vscode.window.activeTextEditor!.document.lineCount) {
       const bline = bdoc.lineAt(i).text;
       let line = vscode.window.activeTextEditor!.document.lineAt(j).text;
@@ -98,9 +91,7 @@ export async function missingCheck(context: vscode.ExtensionContext) {
       (doc) => {
         const fileName = langDoc.fileName.replace(vscode.workspace.rootPath || '', '').substring(1);
         return vscode.commands.executeCommand('vscode.diff', langDoc.uri, doc.uri, `${fileName} ↔ (${allMissingKeys.length}) missing`).then(
-          () => {
-            console.log('done');
-          },
+          (ok) => null,
           (err) => {
             const errorMessage = 'Error opening diff editor.';
             vscode.window.showErrorMessage(errorMessage);
@@ -116,7 +107,7 @@ export async function missingCheck(context: vscode.ExtensionContext) {
     );
     // });
   } catch (err) {
-    const errorMessage = 'Error while parsing the file: ' + currentFileName;
+    const errorMessage = 'Error while checking missing kesy in: ' + currentFileName;
     vscode.window.showErrorMessage(errorMessage);
     console.error(errorMessage, err);
   }
