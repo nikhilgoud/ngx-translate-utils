@@ -50,14 +50,25 @@ export function GetKeyAtPositionInDocument(position: vscode.Position, document: 
     );
     const newRange = new vscode.Range(nstart, nend);
     return { clickedKey: document.getText(newRange), range: newRange };
+  } else if (document.languageId === 'html' && wordRange) {
+    const newRange = new vscode.Range(
+      new vscode.Position(wordRange.start.line, wordRange.start.character + 1),
+      new vscode.Position(
+        wordRange.end.line,
+        wordRange.start.character +
+          document.lineAt(wordRange.end.line).text.substring(wordRange.start.character, wordRange.end.character).lastIndexOf("'")
+      )
+    );
+
+    return {
+      clickedKey: document
+        .getText(wordRange)
+        .replace(/('|"|\s)/g, '')
+        .replace('|translate', ''),
+      range: newRange,
+    };
   }
-  return {
-    clickedKey: document
-      .getText(wordRange)
-      .replace(/('|"|\s)/g, '')
-      .replace('|translate', ''),
-    range: wordRange,
-  };
+  return { clickedKey: document.getText(document.getWordRangeAtPosition(position)), range: document.getWordRangeAtPosition(position) };
 }
 
 /**
@@ -175,9 +186,10 @@ export function getTranslationKeys(obj: any, cat: string | null | undefined, tKe
   return currentKeys;
 }
 
-export function getTranslationKeysInOrder(doc: vscode.TextDocument): string[] {
+export function getTranslationKeysInOrder(doc: vscode.TextDocument): { Keys: string[]; Values: string[] } {
   let keyprefix = '';
   const currentKeys = [];
+  const vals: string[] = [];
   for (let i = 0; i < doc.lineCount; i++) {
     let line = doc.lineAt(i).text;
     // const bline = bdoc.lineAt(j).text;
@@ -191,12 +203,13 @@ export function getTranslationKeysInOrder(doc: vscode.TextDocument): string[] {
     if (line.trim().endsWith(',')) {
       line = line.substring(0, line.length - 1);
     }
-    const kv = line.trim() !== '' && tryParseJSON(`{${line}}`);
+    const kv: { [key: string]: string } = line.trim() !== '' && tryParseJSON(`{${line}}`);
     if (kv) {
       currentKeys.push(keyprefix ? `${keyprefix}.${Object.entries(kv)[0][0]}` : Object.entries(kv)[0][0]);
+      vals.push(Object.entries(kv)[0][1]);
     }
   }
-  return currentKeys;
+  return { Keys: currentKeys, Values: vals };
 }
 
 export function getTranslationKeyFromString(input: string, caseMode = 'snake', autocapitalize = true) {

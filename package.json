@@ -2,7 +2,7 @@
   "name": "ngx-translate-utils",
   "displayName": "ngx-translate-utils",
   "description": "ngx-translate Utilities",
-  "version": "0.1.1",
+  "version": "0.1.11",
   "publisher": "nikhilgoud",
   "license": "SEE LICENSE IN LICENSE",
   "enableProposedApi": true,

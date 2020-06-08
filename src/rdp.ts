@@ -1,5 +1,5 @@
-import { TextDocument, Uri, Position, CancellationToken, Location, ProviderResult, DefinitionProvider } from "vscode";
-import { GetKeyAtPositionInDocument, FindObjectsForKeyInResourceFiles } from "./utils";
+import { TextDocument, Uri, Position, CancellationToken, Location, ProviderResult, DefinitionProvider } from 'vscode';
+import { GetKeyAtPositionInDocument, FindObjectsForKeyInResourceFiles } from './utils';
 
 export class ResourceDefinitionProvider implements DefinitionProvider {
   provideDefinition(document: TextDocument, position: Position, token: CancellationToken): ProviderResult<Location[]> {
@@ -9,7 +9,7 @@ export class ResourceDefinitionProvider implements DefinitionProvider {
     }
 
     return FindObjectsForKeyInResourceFiles(clickedKey).then((foundObjects) => {
-      if (!foundObjects) {
+      if (!foundObjects || foundObjects.every((f) => f.lineNumber === 0)) {
         // Return null because the clicked key was not found in any resource files.
         return null;
       }

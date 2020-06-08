@@ -30,8 +30,8 @@ export async function missingCheck(context: vscode.ExtensionContext) {
     }
     const baseLangDocs = await vscode.workspace.findFiles(getI18nPath());
     const bdoc = await vscode.workspace.openTextDocument(baseLangDocs[0]);
-    const keys = getTranslationKeysInOrder(langDoc);
-    const baseKeys = getTranslationKeysInOrder(bdoc);
+    const { Keys: keys } = getTranslationKeysInOrder(langDoc);
+    const { Keys: baseKeys } = getTranslationKeysInOrder(bdoc);
 
     const allMissingKeys = baseKeys.filter((b) => keys.indexOf(b) === -1);
     let organised = false;
