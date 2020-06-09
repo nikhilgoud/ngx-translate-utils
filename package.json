@@ -2,7 +2,7 @@
   "name": "ngx-translate-utils",
   "displayName": "ngx-translate-utils",
   "description": "ngx-translate Utilities",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "publisher": "nikhilgoud",
   "license": "SEE LICENSE IN LICENSE",
   "enableProposedApi": true,
@@ -153,12 +153,13 @@
     "@types/vscode": "^1.44.0",
     "@typescript-eslint/eslint-plugin": "^3.0.2",
     "@typescript-eslint/parser": "^3.0.2",
-    "clipboardy": "^2.3.0",
-    "copy-to-clipboard": "^3.3.1",
     "eslint": "^7.1.0",
     "glob": "^7.1.4",
     "mocha": "^6.1.4",
     "typescript": "^3.9.4",
     "vscode-test": "^1.3.0"
+  },
+  "dependencies": {
+    "clipboardy": "^2.3.0"
   }
 }
