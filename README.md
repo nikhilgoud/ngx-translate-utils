@@ -3,9 +3,9 @@
 This extension should be used in an Angular project that uses angular translation library [ngx-translate](https://github.com/ngx-translate/core) [@ngx-translate](https://www.npmjs.com/package/@ngx-translate/core).  
 
 <!-- [![Build Status]() -->
-![version-short](https://vsmarketplacebadge.apphb.com/version-short/ngx-translate-utils.svg)
-![installs](https://vsmarketplacebadge.apphb.com/installs/ngx-translate-utils.svg)
-![rating-star](https://vsmarketplacebadge.apphb.com/rating-star/ngx-translate-utils.svg)
+![version-short](https://vsmarketplacebadge.apphb.com/version-short/nikhilgoud.ngx-translate-utils.svg)
+![installs](https://vsmarketplacebadge.apphb.com/installs/nikhilgoud.ngx-translate-utils.svg)
+![rating-star](https://vsmarketplacebadge.apphb.com/rating-star/nikhilgoud.ngx-translate-utils.svg)
 
 [Link to VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=nikhilgoud.ngx-translate-utils)  
 
