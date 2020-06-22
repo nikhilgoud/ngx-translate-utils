@@ -2,6 +2,11 @@
 
 This extension should be used in an Angular project that uses angular translation library [ngx-translate](https://github.com/ngx-translate/core) [@ngx-translate](https://www.npmjs.com/package/@ngx-translate/core).  
 
+<!-- [![Build Status]() -->
+![version-short](https://vsmarketplacebadge.apphb.com/version-short/ngx-translate-utils.svg)
+![installs](https://vsmarketplacebadge.apphb.com/installs/ngx-translate-utils.svg)
+![rating-star](https://vsmarketplacebadge.apphb.com/rating-star/ngx-translate-utils.svg)
+
 [Link to VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=nikhilgoud.ngx-translate-utils)  
 
 ![ts hover info image](assets/rdp.gif)  
@@ -34,7 +39,7 @@ This is created using the existing extensions
 |```ngxu.createTranslation``` | ```NGX-Translate: Generate Translation code snippet.```|- Turns selected text into a ngx-translate snippet string and pipe. Incase of new key the ```"KEY": "VALUE"``` string is copied to clipboard for [defaultLanguage].json file.|
 |```ngxu.zombies``` |```NGX-Translate: Find Unused translations in this file.``` |When having a ngx-translate translation(lang file) file. A diff editor will be openend showing the unused keys.|
 |```ngxu.organize``` |```Organize translations in this file with base language file```|When having a ngx-translate translation(lang file) file. Prompts to Save or Open diff editor.|
-|```ngxu.missed``` |```Find Missing translations in this file after oraganizing with base```|When having a ngx-translate translation(lang file) file. A diff editor will be openend showing the missed keys.|{:.table-striped}  
+|```ngxu.missed``` |```Find Missing translations in this file after oraganizing with base```|When having a ngx-translate translation(lang file) file. A diff editor will be openend showing the missed keys.| 
 
 
 ## Contribute / Bugs / Feature Requests / Help
