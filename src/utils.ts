@@ -38,8 +38,9 @@ export function GetKeyAtPositionInDocument(position: vscode.Position, document: 
     const ii = ltext.lastIndexOf('.instant(');
     const gi = ltext.lastIndexOf('.get(');
     const vi = ltext.lastIndexOf('getI18nValue(');
+    const mi = ltext.lastIndexOf('.marker(');
 
-    if (!(ii > -1 || gi > -1 || vi > -1)) {
+    if (!(ii > -1 || gi > -1 || vi > -1 || mi > -1)) {
       return { clickedKey: '', range: undefined };
     }
     // const ni = [ii, gi, vi].reduce((p, c) => (Math.abs(c - position.character) < Math.abs(p - position.character) ? c : p));
