@@ -38,7 +38,7 @@ export function GetKeyAtPositionInDocument(position: vscode.Position, document: 
     const ii = ltext.lastIndexOf('.instant(');
     const gi = ltext.lastIndexOf('.get(');
     const vi = ltext.lastIndexOf('getI18nValue(');
-    const mi = ltext.lastIndexOf('.marker(');
+    const mi = ltext.lastIndexOf('marker(');
 
     if (!(ii > -1 || gi > -1 || vi > -1 || mi > -1)) {
       return { clickedKey: '', range: undefined };
